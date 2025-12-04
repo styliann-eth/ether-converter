@@ -10,9 +10,9 @@ import {
   AddLiquidity as AddLiquidityEvent,
   RemoveLiquidity as RemoveLiquidityEvent,
   RemoveLiquidityOne as RemoveLiquidityOneEvent,
-} from '../generated/MisconfiguredPool/CurveStableSwap';
+} from '../../generated/MisconfiguredPool/CurveStableSwap';
 
-import { Deposit, Withdrawal, Pool } from '../generated/schema';
+import { Deposit, Withdrawal, Pool } from '../../generated/schema';
 
 import {
   POOL_ADDRESS,
@@ -26,7 +26,7 @@ import {
   updateUserAggregates,
   initPoolIfNeeded,
   getTokenAddressFromPool,
-} from './helpers';
+} from '../helpers';
 
 /**
  * fetchRedemptionRate
@@ -70,13 +70,46 @@ export function handleAddLiquidity(event: AddLiquidityEvent): void {
   let providerStr = event.params.provider.toHexString();
   let block = event.block;
 
+  // Defensive pool load / creation check
   let pool = Pool.load(POOL_ADDRESS.toHexString());
+  if (pool == null) {
+    log.info('Pool missing after initPoolIfNeeded at block {}', [
+      event.block.number.toString(),
+    ]);
+    initPoolIfNeeded(POOL_ADDRESS, event.block);
+    pool = Pool.load(POOL_ADDRESS.toHexString());
+    if (pool == null) {
+      log.error(
+        'initPoolIfNeeded failed to create Pool; aborting handler for tx {}',
+        [event.transaction.hash.toHexString()]
+      );
+      return;
+    } else {
+      log.info('Pool created by initPoolIfNeeded at block {}', [
+        event.block.number.toString(),
+      ]);
+    }
+  } else {
+    log.info('Pool loaded successfully at block {}', [
+      event.block.number.toString(),
+    ]);
+  }
+
   let amounts = event.params.token_amounts;
+  log.info('handleAddLiquidity: tx={} block={} amounts_len={}', [
+    event.transaction.hash.toHexString(),
+    event.block.number.toString(),
+    amounts.length.toString(),
+  ]);
 
   for (let i = 0; i < amounts.length; i++) {
     let tokenIndex = i;
     let amountRaw = amounts[i];
     if (amountRaw.isZero()) {
+      log.info('handleAddLiquidity: skipping zero amount index={} tx={}', [
+        i.toString(),
+        event.transaction.hash.toHexString(),
+      ]);
       continue;
     }
 
@@ -91,6 +124,12 @@ export function handleAddLiquidity(event: AddLiquidityEvent): void {
       if (tokenIndex == 1) tokenAddr = WSTETH_ADDRESS;
       if (tokenIndex == 2) tokenAddr = WETH_ADDRESS;
     }
+
+    log.info('handleAddLiquidity: resolved tokenAddr index={} addr={} tx={}', [
+      tokenIndex.toString(),
+      tokenAddr.toHexString(),
+      event.transaction.hash.toHexString(),
+    ]);
 
     let decimals = fetchTokenDecimals(tokenAddr);
     let amountDecimal = toDecimal(amountRaw, decimals);
@@ -114,6 +153,18 @@ export function handleAddLiquidity(event: AddLiquidityEvent): void {
     d.blockTimestamp = block.timestamp;
     d.transactionHash = event.transaction.hash;
     d.save();
+
+    // CONFIRMATION LOG
+    log.info(
+      'saved Deposit id={} provider={} tokenIndex={} amountRaw={} tx={}',
+      [
+        id,
+        providerStr,
+        tokenIndex.toString(),
+        amountRaw.toString(),
+        event.transaction.hash.toHexString(),
+      ]
+    );
 
     updateUserAggregates(
       providerStr,
@@ -139,12 +190,44 @@ export function handleRemoveLiquidity(event: RemoveLiquidityEvent): void {
   let block = event.block;
 
   let pool = Pool.load(POOL_ADDRESS.toHexString());
+  if (pool == null) {
+    log.info('Pool missing after initPoolIfNeeded at block {}', [
+      event.block.number.toString(),
+    ]);
+    initPoolIfNeeded(POOL_ADDRESS, event.block);
+    pool = Pool.load(POOL_ADDRESS.toHexString());
+    if (pool == null) {
+      log.error(
+        'initPoolIfNeeded failed to create Pool; aborting handler for tx {}',
+        [event.transaction.hash.toHexString()]
+      );
+      return;
+    } else {
+      log.info('Pool created by initPoolIfNeeded at block {}', [
+        event.block.number.toString(),
+      ]);
+    }
+  } else {
+    log.info('Pool loaded successfully at block {}', [
+      event.block.number.toString(),
+    ]);
+  }
+
   let amounts = event.params.token_amounts;
+  log.info('handleRemoveLiquidity: tx={} block={} amounts_len={}', [
+    event.transaction.hash.toHexString(),
+    event.block.number.toString(),
+    amounts.length.toString(),
+  ]);
 
   for (let i = 0; i < amounts.length; i++) {
     let tokenIndex = i;
     let amountRaw = amounts[i];
     if (amountRaw.isZero()) {
+      log.info('handleRemoveLiquidity: skipping zero amount index={} tx={}', [
+        i.toString(),
+        event.transaction.hash.toHexString(),
+      ]);
       continue;
     }
 
@@ -157,6 +240,15 @@ export function handleRemoveLiquidity(event: RemoveLiquidityEvent): void {
       if (tokenIndex == 1) tokenAddr = WSTETH_ADDRESS;
       if (tokenIndex == 2) tokenAddr = WETH_ADDRESS;
     }
+
+    log.info(
+      'handleRemoveLiquidity: resolved tokenAddr index={} addr={} tx={}',
+      [
+        tokenIndex.toString(),
+        tokenAddr.toHexString(),
+        event.transaction.hash.toHexString(),
+      ]
+    );
 
     let decimals = fetchTokenDecimals(tokenAddr);
     let amountDecimal = toDecimal(amountRaw, decimals);
@@ -179,6 +271,17 @@ export function handleRemoveLiquidity(event: RemoveLiquidityEvent): void {
     w.blockTimestamp = block.timestamp;
     w.transactionHash = event.transaction.hash;
     w.save();
+
+    log.info(
+      'saved Withdrawal id={} provider={} tokenIndex={} amountRaw={} tx={}',
+      [
+        id,
+        providerStr,
+        tokenIndex.toString(),
+        amountRaw.toString(),
+        event.transaction.hash.toHexString(),
+      ]
+    );
 
     updateUserAggregates(
       providerStr,
@@ -203,13 +306,40 @@ export function handleRemoveLiquidityOne(event: RemoveLiquidityOneEvent): void {
   let providerStr = event.params.provider.toHexString();
   let block = event.block;
 
+  let pool = Pool.load(POOL_ADDRESS.toHexString());
+  if (pool == null) {
+    log.info('Pool missing after initPoolIfNeeded at block {}', [
+      event.block.number.toString(),
+    ]);
+    initPoolIfNeeded(POOL_ADDRESS, event.block);
+    pool = Pool.load(POOL_ADDRESS.toHexString());
+    if (pool == null) {
+      log.error(
+        'initPoolIfNeeded failed to create Pool; aborting handler for tx {}',
+        [event.transaction.hash.toHexString()]
+      );
+      return;
+    } else {
+      log.info('Pool created by initPoolIfNeeded at block {}', [
+        event.block.number.toString(),
+      ]);
+    }
+  } else {
+    log.info('Pool loaded successfully at block {}', [
+      event.block.number.toString(),
+    ]);
+  }
+
   let tokenIndex = event.params.token_id.toI32();
   let amountRaw = event.params.token_amount;
   if (amountRaw.isZero()) {
+    log.info('handleRemoveLiquidityOne: zero amount tokenIndex={} tx={}', [
+      tokenIndex.toString(),
+      event.transaction.hash.toHexString(),
+    ]);
     return;
   }
 
-  let pool = Pool.load(POOL_ADDRESS.toHexString());
   let tokenAddr = getTokenAddressFromPool(pool, tokenIndex);
   if (
     tokenAddr ==
@@ -219,6 +349,15 @@ export function handleRemoveLiquidityOne(event: RemoveLiquidityOneEvent): void {
     if (tokenIndex == 1) tokenAddr = WSTETH_ADDRESS;
     if (tokenIndex == 2) tokenAddr = WETH_ADDRESS;
   }
+
+  log.info(
+    'handleRemoveLiquidityOne: resolved tokenAddr index={} addr={} tx={}',
+    [
+      tokenIndex.toString(),
+      tokenAddr.toHexString(),
+      event.transaction.hash.toHexString(),
+    ]
+  );
 
   let decimals = fetchTokenDecimals(tokenAddr);
   let amountDecimal = toDecimal(amountRaw, decimals);
@@ -242,6 +381,17 @@ export function handleRemoveLiquidityOne(event: RemoveLiquidityOneEvent): void {
   w.transactionHash = event.transaction.hash;
   w.save();
 
+  log.info(
+    'saved Withdrawal (one) id={} provider={} tokenIndex={} amountRaw={} tx={}',
+    [
+      id,
+      providerStr,
+      tokenIndex.toString(),
+      amountRaw.toString(),
+      event.transaction.hash.toHexString(),
+    ]
+  );
+
   updateUserAggregates(
     providerStr,
     BigDecimal.fromString('0'),
@@ -249,14 +399,3 @@ export function handleRemoveLiquidityOne(event: RemoveLiquidityOneEvent): void {
     block.number
   );
 }
-
-// export function handleTransfer(event: TransferEvent): void {
-//   // Minimal, defensive Transfer handler to avoid string allocation crashes.
-//   // Log only a short tx prefix and the block number.
-//   let txHashFull = event.transaction.hash.toHexString();
-//   let txPrefix = txHashFull.length > 12 ? txHashFull.substr(0, 12) : txHashFull;
-//   log.info('handleTransfer: txPrefix={} block={}', [
-//     txPrefix,
-//     event.block.number.toString(),
-//   ]);
-// }

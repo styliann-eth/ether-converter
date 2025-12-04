@@ -52,3 +52,129 @@ type User @entity(immutable: false) {
   netLossWETH: BigDecimal!
   lastUpdatedBlock: BigInt
 }
+
+# Event / log entities (immutable = true)
+type Transfer @entity(immutable: true) {
+  id: ID!
+  sender: Bytes!
+  receiver: Bytes!
+  value: BigInt!
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}
+
+type Approval @entity(immutable: true) {
+  id: ID!
+  owner: Bytes!
+  spender: Bytes!
+  value: BigInt!
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}
+
+type TokenExchange @entity(immutable: true) {
+  id: ID!
+  buyer: Bytes!
+  sold_id: Int
+  tokens_sold: BigInt
+  bought_id: Int
+  tokens_bought: BigInt
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+  txHash: String
+}
+
+type TokenExchangeUnderlying @entity(immutable: true) {
+  id: ID!
+  buyer: Bytes!
+  sold_id: Int
+  tokens_sold: BigInt
+  bought_id: Int
+  tokens_bought: BigInt
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}
+
+type AddLiquidity @entity(immutable: true) {
+  id: ID!
+  provider: Bytes!
+  token_amounts: [BigInt!]!
+  fees: [BigInt!]!
+  invariant: BigInt
+  token_supply: BigInt
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}
+
+type RemoveLiquidity @entity(immutable: true) {
+  id: ID!
+  provider: Bytes!
+  token_amounts: [BigInt!]!
+  fees: [BigInt!]!
+  token_supply: BigInt
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}
+
+type RemoveLiquidityOne @entity(immutable: true) {
+  id: ID!
+  provider: Bytes!
+  token_amounts: [BigInt!]!
+  fees: [BigInt!]!
+  token_supply: BigInt
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}
+
+type RemoveLiquidityImbalance @entity(immutable: true) {
+  id: ID!
+  provider: Bytes!
+  token_amounts: [BigInt!]!
+  fees: [BigInt!]!
+  token_supply: BigInt
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}
+
+type RampA @entity(immutable: true) {
+  id: ID!
+  oldA: BigInt
+  newA: BigInt
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}
+
+type StopRampA @entity(immutable: true) {
+  id: ID!
+  currentA: BigInt
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}
+
+type ApplyNewFee @entity(immutable: true) {
+  id: ID!
+  oldFee: BigInt
+  newFee: BigInt
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}
+
+type SetNewMATime @entity(immutable: true) {
+  id: ID!
+  oldMA: BigInt
+  newMA: BigInt
+  blockNumber: BigInt
+  blockTimestamp: BigInt
+  transactionHash: Bytes
+}

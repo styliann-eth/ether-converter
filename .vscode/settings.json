@@ -1,0 +1,12 @@
+{
+  "files.exclude": {
+    "**/generated/**": true
+  },
+  "search.exclude": {
+    "**/generated/**": true
+  },
+  "files.watcherExclude": {
+    "**/generated/**": true
+  },
+  "typescript.validate.enable": true
+}
