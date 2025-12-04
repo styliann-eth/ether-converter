@@ -6,7 +6,7 @@ import {
   ethereum,
   log,
 } from '@graphprotocol/graph-ts';
-import { OracleRate, Pool, User } from '../generated/schema';
+import { OracleRate, Pool, User } from '../../generated/schema';
 
 /** Replace these with your real addresses */
 export const POOL_ADDRESS = Address.fromString(
@@ -130,19 +130,23 @@ export function getTokenAddressFromPool(
   pool: Pool | null,
   index: i32
 ): Address {
+  const ZERO = '0x0000000000000000000000000000000000000000';
+
   if (pool == null) {
-    return Address.fromString('0x0000000000000000000000000000000000000000');
+    return Address.fromString(ZERO);
   }
+
   let tokens = pool.tokens;
   if (tokens == null) {
-    return Address.fromString('0x0000000000000000000000000000000000000000');
+    return Address.fromString(ZERO);
   }
+
+  // Guard by bounds first so the compiler knows tokens[index] is valid
   if (index < 0 || index >= tokens.length) {
-    return Address.fromString('0x0000000000000000000000000000000000000000');
+    return Address.fromString(ZERO);
   }
-  let b = tokens[index];
-  if (b == null) {
-    return Address.fromString('0x0000000000000000000000000000000000000000');
-  }
-  return Address.fromBytes(b);
+
+  // Cast the element to Bytes (non-null) and convert to Address
+  let bytesValue = tokens[index] as Bytes;
+  return Address.fromBytes(bytesValue);
 }

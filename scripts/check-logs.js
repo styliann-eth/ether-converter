@@ -6,7 +6,7 @@ const provider = new ethers.providers.JsonRpcProvider(
 );
 const address = '0x2fD13b49F970e8C6D89283056C1c6281214b7EB6'; // pool address
 const fromBlock = 38642218; // set to your startBlock
-const toBlock = fromBlock + 5000;
+const toBlock = fromBlock + 50000;
 
 async function main() {
   const logs = await provider.getLogs({ address, fromBlock, toBlock });

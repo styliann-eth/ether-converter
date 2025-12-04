@@ -1,6 +1,7 @@
 {
   "name": "ether-converter",
   "license": "UNLICENSED",
+  "type": "module",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
@@ -8,13 +9,19 @@
     "create-local": "graph create --node http://localhost:8020/ ether-converter",
     "remove-local": "graph remove --node http://localhost:8020/ ether-converter",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 ether-converter",
-    "test": "graph test"
+    "test": "graph test",
+    "value-remaining:ts": "node --loader ts-node/esm scripts/value-remaining.ts",
+    "value-remaining:env": "NODE_OPTIONS=--loader=ts-node/esm npx ts-node scripts/value-remaining.ts"
   },
   "dependencies": {
-    "@graphprotocol/graph-ts": "^0.38.2"
+    "@graphprotocol/graph-ts": "^0.38.2",
+    "decimal.js": "^10.6.0"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.98.1",
-    "matchstick-as": "0.6.0"
+    "@types/node": "^24.10.1",
+    "matchstick-as": "0.6.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

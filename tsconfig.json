@@ -1,16 +1,19 @@
 {
   "compilerOptions": {
-    "target": "es2017",
-    "module": "commonjs",
-    "lib": ["es2017"],
-    "strict": true,
-    "noImplicitAny": false,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "strict": true,
+    "isolatedModules": true,
+    "outDir": "dist",
+    "types": ["node"],
+    "typeRoots": ["./types", "./node_modules/@types"]
   },
-  "exclude": [
-    "generated",
-    "src", // exclude AssemblyScript mapping files under src
-    "node_modules"
-  ]
+  "ts-node": { "esm": true, "transpileOnly": true },
+  "include": ["./scripts", "./test", "./tasks", "./contracts"]
 }
