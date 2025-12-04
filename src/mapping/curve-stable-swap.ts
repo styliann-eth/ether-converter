@@ -26,7 +26,7 @@ import {
   updateUserAggregates,
   initPoolIfNeeded,
   getTokenAddressFromPool,
-} from '../helpers';
+} from './helpers';
 
 /**
  * fetchRedemptionRate
